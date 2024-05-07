@@ -3,8 +3,6 @@ from bs4 import BeautifulSoup
 from bs4.element import CData
 from html_sanitizer import Sanitizer
 
-Sanitizer.__dict__
-
 file_path = "data/export_overblog.xml"
 
 # Update sanitizer settings to allow img
@@ -16,7 +14,7 @@ my_settings['attributes'].update({'img': ('src', )})
 with open(file_path, "r", encoding='UTF-8') as f:
     data = f.read()
 
-content_id = 7
+content_id = 7 # set to the next id in your WP database, posts/pages/comments' ids will be set from this one
 comment_id = 0
 
 
