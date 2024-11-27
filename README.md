@@ -2,7 +2,7 @@
 
 > Convertissez votre fichier d'export OverBlog en trois fichiers XML compatibles avec le plugin WP All Import pour WordPress
 
-Occupée à la migration d'un blog OverBlog vers WordPress, j'ai suivi le [guide fait par Cooklicot](https://cooklicot.fr/blog/migrer-depuis-overblog-vers-wordpress/) à ce sujet.
+Occupée à la migration d'un blog OverBlog vers WordPress, j'ai suivi le [guide fait par Camélicot](https://cooklicot.fr/blog/migrer-depuis-overblog-vers-wordpress/) à ce sujet.
 
 Cependant le [script PowerShell](https://github.com/jibap/Overblog2Wordpress) fourni me générait des erreurs, et n'étant pas spécialiste de ce langage, j'ai préféré le réécrire en Python.
 
