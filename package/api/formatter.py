@@ -1,12 +1,12 @@
 from pathlib import Path
+import logging
 
 import copy
 from bs4 import BeautifulSoup
 from bs4.element import CData
 from html_sanitizer import Sanitizer
 
-# TODO: Editer le readme
-# TODO: Faire un exécutable : auto-py-to-exe/pyinstaller ou fbs (demande de downgrader à 3.6)
+# TODO: Faire un exécutable : auto-py-to-exe/pyinstaller
 
 def setup_sanitizer():
     # Update sanitizer settings to allow img
@@ -16,22 +16,28 @@ def setup_sanitizer():
     sane_settings['attributes'].update({'img': ('src', )})
     return Sanitizer(settings=sane_settings)
 
-# TODO: créer une classe et tout passer dedans
 class ExportFormatter:
-    def __init__(self, in_path, out_folder, first_content_id):
-        self.file_path = in_path
+    def __init__(self, in_path: str, out_folder: str, last_wp_id: int):
+        """
+        Initialize the export formatter.
+        :param in_path: file to extract data from
+        :param out_folder: folder to write converted data to
+        :param last_wp_id: last wordpress database id
+        """
+        self.file_path = Path(in_path)
         self.out_folder = Path(out_folder)
-        self.content_id = first_content_id # set to the next id in your WP database, posts/pages/comments' ids will be set from this one
+        self.content_id = last_wp_id + 1 # set to the next id in your WP database, posts/pages/comments' ids will be set from this one
         self.comment_id = 0
 
-        self.data = self.load_data()
+        self.data = self._load_data()
         self.sanitizer = setup_sanitizer()
 
         self.soup_doc = BeautifulSoup(self.data, 'xml')
         self.soup_comments = BeautifulSoup('<comments></comments>', 'xml')
 
-    def load_data(self):
-        #TODO: check if file exists
+    def _load_data(self):
+        if not self.file_path.exists():
+            raise FileNotFoundError(f"File {self.file_path} does not exist")
         with open(self.file_path, "r", encoding='UTF-8') as f:
             file_content = f.read()
         return file_content
@@ -76,7 +82,8 @@ class ExportFormatter:
             self.soup_comments.comments.append(clone)
 
             # process replies recursively
-            if clone.replies:
+            if clone.replies and len(clone.replies) > 0:
+                logging.info(f"Extracting {len(clone.replies)} comment replies from comment #{self.comment_id}...")
                 self._extract_comments(clone.replies)
                 clone.replies.decompose()
 
@@ -93,18 +100,21 @@ class ExportFormatter:
         import_id_tag.string = str(self.content_id)
         element.append(import_id_tag)
 
-        if element.comments:
+        if element.comments and len(element.comments) > 0:
+            logging.info(f"Extracting {len(element.comments)} comments from post #{self.content_id}...")
             comments = element.comments.extract()
             self._extract_comments(comments)
 
     def clean_posts(self):
         posts = self.soup_doc.find_all('post')
+        logging.info(f"Cleaning {len(posts)} posts...")
         for post in posts:
             self.content_id += 1
             self._transform(post)
 
     def clean_pages(self):
         pages = self.soup_doc.find_all('page')
+        logging.info(f"Cleaning {len(pages)} pages...")
         for page in pages:
             self.content_id += 1
             self._transform(page)
@@ -113,23 +123,27 @@ class ExportFormatter:
         Path.mkdir(self.out_folder, parents=True, exist_ok=True)
 
         # save file with comments
-        with open(self.out_folder / 'overblog_comments.xml', 'w', encoding="utf-8") as file_comments:
+        with open(self.out_folder / '3_import_comments.xml', 'w', encoding="utf-8") as file_comments:
             file_comments.write(self.soup_comments.prettify())
+        logging.info("Created comments file")
 
         # save file with pages
         soup_pages = self.soup_doc.pages.extract()
-        with open(self.out_folder / 'overblog_pages.xml', 'w', encoding="utf-8") as file_pages:
+        with open(self.out_folder / '2_import_pages.xml', 'w', encoding="utf-8") as file_pages:
             file_pages.write(soup_pages.prettify())
+        logging.info("Created pages file")
 
         # save file with posts
         soup_posts = self.soup_doc.posts.extract()
-        with open(self.out_folder / 'overblog_posts.xml', 'w', encoding="utf-8") as file_posts:
+        with open(self.out_folder / '1_import_posts.xml', 'w', encoding="utf-8") as file_posts:
             file_posts.write(soup_posts.prettify())
+        logging.info("Created posts file")
 
     def convert_to_wp_format(self):
         self.clean_posts()
         self.clean_pages()
         self.create_files()
+        return True
 
 if __name__ == '__main__':
     process = ExportFormatter(in_path="../../data/export_overblog.xml", out_folder="out", first_content_id=7)
