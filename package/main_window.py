@@ -6,8 +6,8 @@ from PySide6 import QtWidgets, QtCore
 
 from package.api.formatter import ExportFormatter
 
-BASE_SEARCH_FOLDER = QtWidgets.QtCore.QStandardPaths().standardLocations(QtWidgets.QtCore.QStandardPaths.DesktopLocation)
-
+BASE_SEARCH_FOLDER = str(Path(__file__).parent.parent)
+# BASE_SEARCH_FOLDER = QtCore.QStandardPaths().standardLocations(QtCore.QStandardPaths.DesktopLocation)[0]
 
 class Worker(QtCore.QObject):
     finished = QtCore.Signal()
@@ -27,7 +27,7 @@ class Worker(QtCore.QObject):
 
 
 class Bridge(QtCore.QObject):
-    receive_log = QtCore.Signal()
+    receive_log = QtCore.Signal(str)
 
 class QTextEditLogger(logging.Handler):
     @cached_property
@@ -125,12 +125,6 @@ class MainWindow(QtWidgets.QWidget):
                                   "Fichier introuvable",
                                   "Le fichier sélectionné est introuvable. Veuillez re-vérifier.")
             return False
-
-        # if not Path(out_folder).exists():
-        #     QtWidgets.QMessageBox.warning(self,
-        #                           "Dossier introuvable",
-        #                           "Le dossier sélectionné est introuvable. Veuillez revérifier.")
-        #     return False
 
         return True
 
