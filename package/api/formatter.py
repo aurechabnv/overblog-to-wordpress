@@ -43,6 +43,7 @@ class ExportFormatter:
         Convert the content of the export file to 3 separate files in a format compatible with WordPress plugin WP All Import
         :return: Whether the process succeeded
         """
+        logging.info("Début de l'opération")
         try:
             self._soup_doc = self._load_data()
             self._clean_content('post')
@@ -51,6 +52,7 @@ class ExportFormatter:
         except Exception as e:
             logging.error(e)
             return False
+        logging.info("Opération terminée")
         return True
 
     @staticmethod
@@ -59,6 +61,7 @@ class ExportFormatter:
         Set sanitizer settings to allow img tags
         :return: Sanitizer instance
         """
+        logging.debug("Setup du sanitizer HTML")
         settings = dict(Sanitizer().__dict__)
         settings['tags'].add('img')
         settings['empty'].add('img')
@@ -72,7 +75,8 @@ class ExportFormatter:
         :param data: XML data from file
         :return: Whether structure is valid
         """
-        if not data.posts and not data.pages:
+        logging.debug("Vérification de la structure du fichier")
+        if not data.posts or not data.pages:
             logging.debug("Aucun noeud 'posts' ou 'pages' trouvé")
             return False
 
@@ -88,6 +92,7 @@ class ExportFormatter:
         Load the data from the file, check that the format belongs to an OverBlog export
         :return: BeautifulSoup instance of file content
         """
+        logging.debug("Chargement des données du fichier")
         if not self._file_path.exists():
             raise FileNotFoundError(f"Le fichier {self._file_path} n'existe pas")
 
@@ -124,6 +129,7 @@ class ExportFormatter:
         Create the 3 resulting XML files
         :return:
         """
+        logging.debug("Création des fichiers d'export")
         self._output_folder.mkdir(parents=True, exist_ok=True)  # accepts relative and absolute paths
 
         soup_posts = self._soup_doc.posts.extract()
@@ -154,6 +160,9 @@ class ExportFormatter:
         :param node: XML element (post or page) to update to target format
         :return:
         """
+        logging.debug(f"Formattage de l'élément {node.name}")
+        logging.debug(f"Avant : {node}")
+
         # remove unwanted tags
         node.origin.decompose()
         node.slug.decompose()
@@ -175,12 +184,16 @@ class ExportFormatter:
             comments = node.comments.extract()
             self._process_comments(comments)
 
+        logging.debug(f"Après : {node}")
+
     def _process_comments(self, comments):
         """
         Update XML structure of comments, and save them in a separate XML document
         :param comments: Comments node coming from post, page or a parent comment
         :return:
         """
+        logging.debug(f"Formattage des commentaires")
+
         parent_id = self._comment_id
         parent_name = comments.name
 
@@ -190,6 +203,7 @@ class ExportFormatter:
 
             self._comment_id = self._comment_id + 1
             comment = comment.extract()
+            logging.debug(f"Avant : {comment}")
 
             # remove unwanted tags
             if comment.status:
@@ -216,6 +230,7 @@ class ExportFormatter:
 
             # add comment to separate object
             self._soup_comments.comments.append(comment)
+            logging.debug(f"Après : {comment}")
 
             # process replies recursively
             if comment.replies:
@@ -238,6 +253,7 @@ class ExportFormatter:
         :param node: XML node containing HTML data to clean
         :return:
         """
+        logging.debug(f"Assainissement de l'HTML de {node.name}")
         sanitized_text = self._sanitizer.sanitize(unicode(node.content.string))
         node.content.string = CData(sanitized_text)
 

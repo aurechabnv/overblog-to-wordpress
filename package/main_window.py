@@ -148,7 +148,7 @@ class MainWindow(QtWidgets.QWidget):
             if msg_box == QtWidgets.QMessageBox.StandardButton.No:
                 return False
 
-        if not Path(wp_file).exists():
+        if not Path(wp_file).is_file():
             QtWidgets.QMessageBox.warning(self, "Fichier introuvable",
                                           "Le fichier sélectionné est introuvable. Veuillez re-vérifier.")
             return False
