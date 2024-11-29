@@ -55,8 +55,8 @@ class ExportFormatter:
         logging.info("Opération terminée")
         return True
 
-    @staticmethod
-    def _setup_sanitizer():
+    # noinspection PyMethodMayBeStatic
+    def _setup_sanitizer(self):
         """
         Set sanitizer settings to allow img tags
         :return: Sanitizer instance
@@ -67,25 +67,6 @@ class ExportFormatter:
         settings['empty'].add('img')
         settings['attributes'].update({'img': ('src',)})
         return Sanitizer(settings=settings)
-
-    @staticmethod
-    def _check_file_structure(data: BeautifulSoup):
-        """
-        Check if the file structure matches the format of an OverBlog export file
-        :param data: XML data from file
-        :return: Whether structure is valid
-        """
-        logging.debug("Vérification de la structure du fichier")
-        if not data.posts or not data.pages:
-            logging.debug("Aucun noeud 'posts' ou 'pages' trouvé")
-            return False
-
-        if data.find('origin') and (not data.find('origin').string or
-                                    not 'OB' in data.find('origin').string.split(',')):
-            logging.debug("Le format semble correct mais le tag 'origin' n'indique pas d'OverBlog")
-            return False
-
-        return True
 
     def _load_data(self):
         """
@@ -109,6 +90,25 @@ class ExportFormatter:
 
         return xml_data
 
+    # noinspection PyMethodMayBeStatic
+    def _check_file_structure(self, data: BeautifulSoup):
+        """
+        Check if the file structure matches the format of an OverBlog export file
+        :param data: XML data from file
+        :return: Whether structure is valid
+        """
+        logging.debug("Vérification de la structure du fichier")
+        if not data.posts or not data.pages:
+            logging.debug("Aucun noeud 'posts' ou 'pages' trouvé")
+            return False
+
+        if data.find('origin') and (not data.find('origin').string or
+                                    not 'OB' in data.find('origin').string.split(',')):
+            logging.debug("Le format semble correct mais le tag 'origin' n'indique pas d'OverBlog")
+            return False
+
+        return True
+
     def _clean_content(self, node_name: str):
         """
         Clean the content of a node
@@ -123,36 +123,6 @@ class ExportFormatter:
         for node in nodes:
             self._content_id += 1
             self._process_node(node)
-
-    def _create_files(self):
-        """
-        Create the 3 resulting XML files
-        :return:
-        """
-        logging.debug("Création des fichiers d'export")
-        self._output_folder.mkdir(parents=True, exist_ok=True)  # accepts relative and absolute paths
-
-        soup_posts = self._soup_doc.posts.extract()
-        self._create_file(soup=soup_posts, node_type='post', order=1)
-
-        soup_pages = self._soup_doc.pages.extract()
-        self._create_file(soup=soup_pages, node_type='page', order=2)
-
-        self._create_file(soup=self._soup_comments, node_type='comment', order=3)
-
-    def _create_file(self, soup: BeautifulSoup, node_type: str, order: int):
-        """
-        Create the XML file
-        :param soup:
-        :param node_type: either 'post', 'page' or 'comment'
-        :param order: file order to be set in the file name
-        :return:
-        """
-        total = len(soup.find_all(node_type))
-        file_name = f"{order}_{self._file_path.stem}_{node_type}s.xml"
-        logging.info(f"Sauvegarde de {total} élément{'s' if total > 1 else ''} dans le fichier {file_name}")
-        with open(self._output_folder / file_name, 'w', encoding='utf-8') as f:
-            f.write(soup.prettify())
 
     def _process_node(self, node):
         """
@@ -256,6 +226,36 @@ class ExportFormatter:
         logging.debug(f"Assainissement de l'HTML de {node.name}")
         sanitized_text = self._sanitizer.sanitize(unicode(node.content.string))
         node.content.string = CData(sanitized_text)
+
+    def _create_files(self):
+        """
+        Create the 3 resulting XML files
+        :return:
+        """
+        logging.debug("Création des fichiers d'export")
+        self._output_folder.mkdir(parents=True, exist_ok=True)  # accepts relative and absolute paths
+
+        soup_posts = self._soup_doc.posts.extract()
+        self._create_file(soup=soup_posts, node_type='post', order=1)
+
+        soup_pages = self._soup_doc.pages.extract()
+        self._create_file(soup=soup_pages, node_type='page', order=2)
+
+        self._create_file(soup=self._soup_comments, node_type='comment', order=3)
+
+    def _create_file(self, soup: BeautifulSoup, node_type: str, order: int):
+        """
+        Create the XML file
+        :param soup:
+        :param node_type: either 'post', 'page' or 'comment'
+        :param order: file order to be set in the file name
+        :return:
+        """
+        total = len(soup.find_all(node_type))
+        file_name = f"{order}_{self._file_path.stem}_{node_type}s.xml"
+        logging.info(f"Sauvegarde de {total} élément{'s' if total > 1 else ''} dans le fichier {file_name}")
+        with open(self._output_folder / file_name, 'w', encoding='utf-8') as f:
+            f.write(soup.prettify())
 
 
 if __name__ == '__main__':
