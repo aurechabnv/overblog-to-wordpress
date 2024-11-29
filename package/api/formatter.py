@@ -1,5 +1,5 @@
-from pathlib import Path
 import logging
+from pathlib import Path
 
 from bs4 import BeautifulSoup
 from bs4.element import CData, Tag
@@ -7,6 +7,7 @@ from html_sanitizer import Sanitizer
 from lxml.builder import unicode
 
 logging.getLogger().setLevel(logging.INFO)
+
 
 class ExportFormatter:
     _soup_doc: BeautifulSoup
@@ -26,12 +27,12 @@ class ExportFormatter:
         """
         self._soup_comments = BeautifulSoup('<comments></comments>', 'xml')
         self._sanitizer = self._setup_sanitizer()
-        self._comment_id = 0 # comments have a different increment id from posts and pages
+        self._comment_id = 0  # comments have a different increment id from posts and pages
 
         # user-determined values
         self._file_path = Path(file_path)
         self._output_folder = Path(output_folder)
-        self._content_id = last_wp_id + 1 # set to the next id in target WP database, post and page ids will be set starting from this one
+        self._content_id = last_wp_id + 1  # set to the next id in target WP database, post and page ids will be set starting from this one
 
     def convert_to_wp_format(self):
         """
@@ -70,9 +71,12 @@ class ExportFormatter:
         if not data.posts and not data.pages:
             logging.debug("Aucun noeud 'posts' ou 'pages' trouvé")
             return False
-        if data.find('origin') and (not data.find('origin').string or not 'OB' in data.find('origin').string.split(',')):
+
+        if data.find('origin') and (not data.find('origin').string or
+                                    not 'OB' in data.find('origin').string.split(',')):
             logging.debug("Le format semble correct mais le tag 'origin' n'indique pas d'OverBlog")
             return False
+
         return True
 
     def _load_data(self):
@@ -116,7 +120,7 @@ class ExportFormatter:
         Create the 3 resulting XML files
         :return:
         """
-        Path.mkdir(self._output_folder, parents=True, exist_ok=True)
+        self._output_folder.mkdir(parents=True, exist_ok=True)  # accepts relative and absolute paths
 
         soup_posts = self._soup_doc.posts.extract()
         self._create_file(soup=soup_posts, node_type='post', order=1)
@@ -210,8 +214,8 @@ class ExportFormatter:
             self._soup_comments.comments.append(comment)
 
             # process replies recursively
-            total_replies = len(comment.find_all('comment'))
             if comment.replies:
+                total_replies = len(comment.find_all('comment'))
                 if total_replies > 0:
                     logging.info(f"Récupération de {total_replies} réponse{'s' if total_replies > 1 else ''} au commentaire #{self._comment_id}...")
                     replies = comment.replies.extract()
@@ -233,6 +237,9 @@ class ExportFormatter:
         sanitized_text = self._sanitizer.sanitize(unicode(node.content.string))
         node.content.string = CData(sanitized_text)
 
+
 if __name__ == '__main__':
-    process = ExportFormatter(file_path="../../data/export_overblog.xml", output_folder="../../data/filegen", last_wp_id=7)
+    process = ExportFormatter(file_path="../../data/export-overblog.xml",
+                              output_folder="output",
+                              last_wp_id=7)
     process.convert_to_wp_format()

@@ -6,8 +6,8 @@ from PySide6 import QtWidgets, QtCore
 
 from package.api.formatter import ExportFormatter
 
-BASE_SEARCH_FOLDER = str(Path(__file__).parent.parent)
-# BASE_SEARCH_FOLDER = QtCore.QStandardPaths().standardLocations(QtCore.QStandardPaths.DesktopLocation)[0]
+BASE_BROWSE_DIR = QtCore.QStandardPaths().standardLocations(QtCore.QStandardPaths.StandardLocation.DesktopLocation)[0]
+
 
 class Worker(QtCore.QObject):
     finished = QtCore.Signal(bool)
@@ -19,13 +19,16 @@ class Worker(QtCore.QObject):
         self.last_db_id = last_db_id
 
     def convert_file(self):
-        formatter = ExportFormatter(file_path=self.file_to_convert, output_folder=self.output_folder, last_wp_id=self.last_db_id)
+        formatter = ExportFormatter(file_path=self.file_to_convert,
+                                    output_folder=self.output_folder,
+                                    last_wp_id=self.last_db_id)
         success = formatter.convert_to_wp_format()
         self.finished.emit(success)
 
 
 class Bridge(QtCore.QObject):
     receive_log = QtCore.Signal(str)
+
 
 class QTextEditLogger(logging.Handler):
     @cached_property
@@ -44,6 +47,20 @@ class QTextEditLogger(logging.Handler):
 
 
 class MainWindow(QtWidgets.QWidget):
+    thread: QtCore.QThread
+    worker: Worker
+    main_layout: QtWidgets.QGridLayout
+    lbl_file: QtWidgets.QLabel
+    lbl_folder: QtWidgets.QLabel
+    lbl_id: QtWidgets.QLabel
+    le_file: QtWidgets.QLineEdit
+    le_folder: QtWidgets.QLineEdit
+    sb_id: QtWidgets.QSpinBox
+    btn_browse_file: QtWidgets.QPushButton
+    btn_browse_folder: QtWidgets.QPushButton
+    btn_convert: QtWidgets.QPushButton
+    te_logger: QTextEditLogger
+
     def __init__(self):
         super().__init__()
         self.setWindowTitle("OverBlog vers WordPress")
@@ -90,12 +107,14 @@ class MainWindow(QtWidgets.QWidget):
         self.btn_convert.clicked.connect(self.convert_file)
 
     def select_file(self):
-        file_name = QtWidgets.QFileDialog.getOpenFileName(caption="Fichier d'entrée", dir=BASE_SEARCH_FOLDER, filter="*.xml")[0]
+        file_name = QtWidgets.QFileDialog.getOpenFileName(caption="Fichier d'entrée",
+                                                          dir=BASE_BROWSE_DIR,
+                                                          filter="*.xml")[0]
         if file_name:
             self.le_file.setText(file_name)
 
     def select_folder(self):
-        file_name = QtWidgets.QFileDialog.getExistingDirectory(caption="Dossier de sortie", dir=BASE_SEARCH_FOLDER)
+        file_name = QtWidgets.QFileDialog.getExistingDirectory(caption="Dossier de sortie", dir=BASE_BROWSE_DIR)
         if file_name:
             self.le_folder.setText(file_name)
 
@@ -106,21 +125,21 @@ class MainWindow(QtWidgets.QWidget):
 
         if not wp_file or not out_folder:
             QtWidgets.QMessageBox.warning(self,
-                                  "Paramètres manquants",
-                                  "Il semble manquer des paramètres. Veuillez re-vérifier.")
+                                          title="Paramètres manquants",
+                                          text="Il semble manquer des paramètres. Veuillez re-vérifier.")
             return False
 
         if not last_wp_id:
             msg_box = QtWidgets.QMessageBox.question(self,
-                                  "Vérification de l'ID WordPress",
-                                  f"Le dernier ID de votre base WordPress est paramétré à :\n{last_wp_id}\n\nÊtes-vous sûr ?")
-            if msg_box == QtWidgets.QMessageBox.No:
+                                                     title="Vérification de l'ID WordPress",
+                                                     text=f"Le dernier ID de votre base WordPress est paramétré à :\n{last_wp_id}\n\nÊtes-vous sûr ?")
+            if msg_box == QtWidgets.QMessageBox.StandardButton.No:
                 return False
 
         if not Path(wp_file).exists():
             QtWidgets.QMessageBox.warning(self,
-                                  "Fichier introuvable",
-                                  "Le fichier sélectionné est introuvable. Veuillez re-vérifier.")
+                                          title="Fichier introuvable",
+                                          text="Le fichier sélectionné est introuvable. Veuillez re-vérifier.")
             return False
 
         return True
@@ -141,7 +160,8 @@ class MainWindow(QtWidgets.QWidget):
         self.te_logger.widget.clear()
 
         self.thread = QtCore.QThread(self)
-        self.worker = Worker(file_to_convert=self.le_file.text(), output_folder=self.le_folder.text(), last_db_id=self.sb_id.value())
+        self.worker = Worker(file_to_convert=self.le_file.text(), output_folder=self.le_folder.text(),
+                             last_db_id=self.sb_id.value())
         self.worker.moveToThread(self.thread)
         self.thread.started.connect(self.worker.convert_file)
         self.worker.finished.connect(self.finished_process)
@@ -151,6 +171,10 @@ class MainWindow(QtWidgets.QWidget):
         self.thread.quit()
         self.enable_fields()
         if success:
-            QtWidgets.QMessageBox.information(self, "Opération terminée", "C'est fini !\nDirection WP All Import pour importer vos fichiers dans l'ordre.")
+            QtWidgets.QMessageBox.information(self,
+                                              title="Opération terminée",
+                                              text="C'est fini !\nDirection WP All Import pour importer vos fichiers dans l'ordre.")
         else:
-            QtWidgets.QMessageBox.critical(self, "Erreur", "Une erreur est survenue au cours de l'opération.\nVeuillez consulter les logs dans l'interface.")
+            QtWidgets.QMessageBox.critical(self,
+                                           title="Erreur",
+                                           text="Une erreur est survenue au cours de l'opération.\nVeuillez consulter les logs dans l'interface.")
