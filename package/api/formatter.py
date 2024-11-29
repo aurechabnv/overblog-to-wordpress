@@ -1,7 +1,6 @@
 from pathlib import Path
 import logging
 
-import copy
 from bs4 import BeautifulSoup
 from bs4.element import CData, Tag
 from html_sanitizer import Sanitizer
