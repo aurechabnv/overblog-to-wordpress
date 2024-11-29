@@ -115,9 +115,6 @@ class ExportFormatter:
         :param node_name: either 'post' or 'page'
         :return:
         """
-        if node_name not in ('post', 'page'):
-            raise NotImplementedError(f"XML Node {node_name} non supporté")
-
         nodes = self._soup_doc.find_all(node_name)
         logging.info(f"Formattage de {len(nodes)} {node_name}{'s' if len(nodes) > 1 else ''}...")
         for node in nodes:
