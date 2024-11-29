@@ -26,12 +26,27 @@ class ExportFormatter:
         """
         self._soup_comments = BeautifulSoup('<comments></comments>', 'xml')
         self._sanitizer = self._setup_sanitizer()
-        self._comment_id = 0 # comments are not saved individually in the WP database, thus have a different increment id
+        self._comment_id = 0 # comments are not have a different increment id
 
         # user-determined values
         self._file_path = Path(file_path)
         self._output_folder = Path(output_folder)
         self._content_id = last_wp_id + 1 # set to the next id in target WP database, post and page ids will be set starting from this one
+
+    def convert_to_wp_format(self):
+        """
+        Convert the content of the export file to 3 separate files in a format compatible with WordPress plugin WP All Import
+        :return: Whether the process succeeded
+        """
+        try:
+            self._soup_doc = self._load_data()
+            self._clean_content('post')
+            self._clean_content('page')
+            self._create_files()
+        except Exception as e:
+            logging.error(e)
+            return False
+        return True
 
     @staticmethod
     def _setup_sanitizer():
@@ -57,21 +72,6 @@ class ExportFormatter:
             return False
         if data.find('origin') and (not data.find('origin').string or not 'OB' in data.find('origin').string.split(',')):
             logging.debug("Le format semble correct mais le tag 'origin' n'indique pas d'OverBlog")
-            return False
-        return True
-
-    def convert_to_wp_format(self):
-        """
-        Convert the content of the export file to 3 separate files in a format compatible with WordPress plugin WP All Import
-        :return: Whether the process succeeded
-        """
-        try:
-            self._soup_doc = self._load_data()
-            self._clean_content('post')
-            self._clean_content('page')
-            self._create_files()
-        except Exception as e:
-            logging.error(e)
             return False
         return True
 
@@ -151,7 +151,6 @@ class ExportFormatter:
         node.slug.decompose()
         node.created_at.decompose()
         node.modified_at.decompose()
-        node.author.decompose()
 
         # add post id
         import_id_tag = self._soup_doc.new_tag('import_id')
@@ -185,10 +184,6 @@ class ExportFormatter:
             comment = comment.extract()
 
             # remove unwanted tags
-            if comment.author_url:
-                comment.author_url.decompose()
-            if comment.author_ip:
-                comment.author_ip.decompose()
             if comment.status:
                 comment.status.decompose()
 
