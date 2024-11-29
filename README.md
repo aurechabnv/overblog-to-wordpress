@@ -23,6 +23,6 @@ Exécutez le code :
 
 `python main.py`
 
-Sélectionnez votre fichier d'entrée, votre dossier de sortie, et la dernière ID connue de votre base WordPress.
+Sélectionnez votre fichier d'entrée, votre dossier de sortie, et la dernière ID connue de votre base WordPress (wp_posts par défaut).
 
 Cliquez ensuite sur "Convertir" et voilà !
