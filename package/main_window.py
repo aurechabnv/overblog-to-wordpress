@@ -10,20 +10,18 @@ BASE_SEARCH_FOLDER = str(Path(__file__).parent.parent)
 # BASE_SEARCH_FOLDER = QtCore.QStandardPaths().standardLocations(QtCore.QStandardPaths.DesktopLocation)[0]
 
 class Worker(QtCore.QObject):
-    finished = QtCore.Signal()
+    finished = QtCore.Signal(bool)
 
     def __init__(self, file_to_convert, output_folder, last_db_id):
         super().__init__()
         self.file_to_convert = file_to_convert
         self.output_folder = output_folder
         self.last_db_id = last_db_id
-        self.running = True
 
     def convert_file(self):
-        if self.running:
-            formatter = ExportFormatter(in_path=self.file_to_convert, out_folder=self.output_folder, last_wp_id=self.last_db_id)
-            formatter.convert_to_wp_format()
-        self.finished.emit()
+        formatter = ExportFormatter(file_path=self.file_to_convert, output_folder=self.output_folder, last_wp_id=self.last_db_id)
+        success = formatter.convert_to_wp_format()
+        self.finished.emit(success)
 
 
 class Bridge(QtCore.QObject):
@@ -85,7 +83,6 @@ class MainWindow(QtWidgets.QWidget):
     def modify_widgets(self):
         self.te_logger.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
         logging.getLogger().addHandler(self.te_logger)
-        logging.getLogger().setLevel(logging.DEBUG)
 
     def setup_connections(self):
         self.btn_browse_file.clicked.connect(self.select_file)
@@ -128,7 +125,7 @@ class MainWindow(QtWidgets.QWidget):
 
         return True
 
-    def toggle_fields(self, enable=True):
+    def enable_fields(self, enable=True):
         self.le_file.setEnabled(enable)
         self.btn_browse_file.setEnabled(enable)
         self.le_folder.setEnabled(enable)
@@ -140,17 +137,20 @@ class MainWindow(QtWidgets.QWidget):
         if not self.check_validity():
             return False
 
-        self.toggle_fields(False)
+        self.enable_fields(False)
         self.te_logger.widget.clear()
 
         self.thread = QtCore.QThread(self)
         self.worker = Worker(file_to_convert=self.le_file.text(), output_folder=self.le_folder.text(), last_db_id=self.sb_id.value())
         self.worker.moveToThread(self.thread)
         self.thread.started.connect(self.worker.convert_file)
-        self.worker.finished.connect(self.success)
+        self.worker.finished.connect(self.finished_process)
         self.thread.start()
 
-    def success(self):
+    def finished_process(self, success):
         self.thread.quit()
-        self.toggle_fields(True)
-        QtWidgets.QMessageBox.information(self, "Opération terminée", "C'est fini ! Direction WP All Import pour importer vos fichiers dans l'ordre.")
+        self.enable_fields()
+        if success:
+            QtWidgets.QMessageBox.information(self, "Opération terminée", "C'est fini !\nDirection WP All Import pour importer vos fichiers dans l'ordre.")
+        else:
+            QtWidgets.QMessageBox.critical(self, "Erreur", "Une erreur est survenue au cours de l'opération.\nVeuillez consulter les logs dans l'interface.")
