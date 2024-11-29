@@ -19,8 +19,7 @@ class Worker(QtCore.QObject):
         self.last_db_id = last_db_id
 
     def convert_file(self):
-        formatter = ExportFormatter(file_path=self.file_to_convert,
-                                    output_folder=self.output_folder,
+        formatter = ExportFormatter(file_path=self.file_to_convert, output_folder=self.output_folder,
                                     last_wp_id=self.last_db_id)
         success = formatter.convert_to_wp_format()
         self.finished.emit(success)
@@ -106,15 +105,25 @@ class MainWindow(QtWidgets.QWidget):
         self.btn_browse_folder.clicked.connect(self.select_folder)
         self.btn_convert.clicked.connect(self.convert_file)
 
+    def get_search_folder(self, line_edit):
+        value = line_edit.text()
+        if not value:
+            return BASE_BROWSE_DIR
+
+        if Path(value).is_dir():
+            return value
+        else:
+            return str(Path(value).parent)
+
     def select_file(self):
-        file_name = QtWidgets.QFileDialog.getOpenFileName(caption="Fichier d'entrée",
-                                                          dir=BASE_BROWSE_DIR,
-                                                          filter="*.xml")[0]
+        search_folder = self.get_search_folder(self.le_file)
+        file_name = QtWidgets.QFileDialog.getOpenFileName(caption="Fichier d'entrée", dir=search_folder, filter="*.xml")[0]
         if file_name:
             self.le_file.setText(file_name)
 
     def select_folder(self):
-        file_name = QtWidgets.QFileDialog.getExistingDirectory(caption="Dossier de sortie", dir=BASE_BROWSE_DIR)
+        search_folder = self.get_search_folder(self.le_folder)
+        file_name = QtWidgets.QFileDialog.getExistingDirectory(caption="Dossier de sortie", dir=search_folder)
         if file_name:
             self.le_folder.setText(file_name)
 
@@ -124,22 +133,19 @@ class MainWindow(QtWidgets.QWidget):
         last_wp_id = self.sb_id.value()
 
         if not wp_file or not out_folder:
-            QtWidgets.QMessageBox.warning(self,
-                                          title="Paramètres manquants",
-                                          text="Il semble manquer des paramètres. Veuillez re-vérifier.")
+            QtWidgets.QMessageBox.warning(self, "Paramètres manquants",
+                                          "Il semble manquer des paramètres. Veuillez re-vérifier.")
             return False
 
         if not last_wp_id:
-            msg_box = QtWidgets.QMessageBox.question(self,
-                                                     title="Vérification de l'ID WordPress",
-                                                     text=f"Le dernier ID de votre base WordPress est paramétré à :\n{last_wp_id}\n\nÊtes-vous sûr ?")
+            msg_box = QtWidgets.QMessageBox.question(self, "Vérification de l'ID WordPress",
+                                                     f"Le dernier ID de votre base WordPress est paramétré à :\n{last_wp_id}\n\nÊtes-vous sûr ?")
             if msg_box == QtWidgets.QMessageBox.StandardButton.No:
                 return False
 
         if not Path(wp_file).exists():
-            QtWidgets.QMessageBox.warning(self,
-                                          title="Fichier introuvable",
-                                          text="Le fichier sélectionné est introuvable. Veuillez re-vérifier.")
+            QtWidgets.QMessageBox.warning(self, "Fichier introuvable",
+                                          "Le fichier sélectionné est introuvable. Veuillez re-vérifier.")
             return False
 
         return True
@@ -171,10 +177,8 @@ class MainWindow(QtWidgets.QWidget):
         self.thread.quit()
         self.enable_fields()
         if success:
-            QtWidgets.QMessageBox.information(self,
-                                              title="Opération terminée",
-                                              text="C'est fini !\nDirection WP All Import pour importer vos fichiers dans l'ordre.")
+            QtWidgets.QMessageBox.information(self, "Opération terminée",
+                                              "C'est fini !\nDirection WP All Import pour importer vos fichiers dans l'ordre.")
         else:
-            QtWidgets.QMessageBox.critical(self,
-                                           title="Erreur",
-                                           text="Une erreur est survenue au cours de l'opération.\nVeuillez consulter les logs dans l'interface.")
+            QtWidgets.QMessageBox.critical(self, "Erreur",
+                                           "Une erreur est survenue au cours de l'opération.\nVeuillez consulter les logs dans l'interface.")
