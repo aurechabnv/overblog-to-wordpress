@@ -160,7 +160,7 @@ class ExportFormatter:
         :param node: XML element (post or page) to update to target format
         :return:
         """
-        logging.debug(f"Formattage de l'élément {node.name}")
+        logging.debug(f"Formatage de l'élément {node.name}")
         logging.debug(f"Avant : {node}")
 
         # remove unwanted tags
@@ -192,7 +192,7 @@ class ExportFormatter:
         :param comments: Comments node coming from post, page or a parent comment
         :return:
         """
-        logging.debug(f"Formattage des commentaires")
+        logging.debug(f"Formatage des commentaires")
 
         parent_id = self._comment_id
         parent_name = comments.name

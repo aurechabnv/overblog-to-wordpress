@@ -64,7 +64,7 @@ class MainWindow(QtWidgets.QWidget):
 
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Formatter d'export OverBlog vers WordPress")
+        self.setWindowTitle("Formatage d'export OverBlog vers WordPress")
         self.setup_ui()
 
     def setup_ui(self):
