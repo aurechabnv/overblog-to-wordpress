@@ -8,10 +8,16 @@ Cependant le [script PowerShell](https://github.com/jibap/Overblog2Wordpress) fo
 
 Quelques mois après les faits, je révise le code et ajoute une interface avec PySide6 pour en faciliter l'usage.
 
+## Quand l'utiliser ?
+
+Ce script remplace le PowerShell exécuté à la **quatrième étape** du guide de Camélicot.
+
+Après avoir déterminé le dernier ID de contenu créé dans votre base `wp_posts`, exécutez cet utilitaire pour transformer votre fichier d'export OverBlog, puis poursuivez le guide.
+
 ## Comment l'utiliser ?
 ### Pré-requis
 
-Clonez le projet dans votre IDE préférée, créez un environnement virtuel utilisant Python 3.12
+Clonez le projet dans votre IDE préférée, créez un environnement virtuel utilisant la dernière version de Python (le code a été développé en utilisant la 3.12).
 
 Installez les pré-requis du projet avec pip :
 
@@ -23,6 +29,6 @@ Exécutez le code :
 
 `python main.py`
 
-Sélectionnez votre fichier d'entrée, votre dossier de sortie, et la dernière ID connue de votre base WordPress (wp_posts par défaut).
+Sélectionnez votre fichier d'entrée, votre dossier de sortie, et l'ID récupéré à l'étape précédente du guide.
 
-Cliquez ensuite sur "Convertir" et voilà !
+Cliquez ensuite sur "Convertir", patientez, puis récupérez vos fichiers dans le dossier choisi pour passer à l'import dans WordPress.
