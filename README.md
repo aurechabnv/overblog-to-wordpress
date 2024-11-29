@@ -32,3 +32,4 @@ Exécutez le code :
 Sélectionnez votre fichier d'entrée, votre dossier de sortie, et l'ID récupéré à l'étape précédente du guide.
 
 Cliquez ensuite sur "Convertir", patientez, puis récupérez vos fichiers dans le dossier choisi pour passer à l'import dans WordPress.
+![Aperçu de l'interface graphique](https://github.com/user-attachments/assets/045361e6-9740-4b32-b7e6-c8f379ef2e6f)
