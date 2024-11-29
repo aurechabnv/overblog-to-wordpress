@@ -12,15 +12,16 @@ BASE_BROWSE_DIR = QtCore.QStandardPaths().standardLocations(QtCore.QStandardPath
 class Worker(QtCore.QObject):
     finished = QtCore.Signal(bool)
 
-    def __init__(self, file_to_convert, output_folder, last_db_id):
+    def __init__(self, file_to_convert, output_folder, last_db_id, debug_mode):
         super().__init__()
         self.file_to_convert = file_to_convert
         self.output_folder = output_folder
         self.last_db_id = last_db_id
+        self.debug_mode = debug_mode
 
     def convert_file(self):
         formatter = ExportFormatter(file_path=self.file_to_convert, output_folder=self.output_folder,
-                                    last_wp_id=self.last_db_id)
+                                    last_wp_id=self.last_db_id, debug_mode=self.debug_mode)
         success = formatter.convert_to_wp_format()
         self.finished.emit(success)
 
@@ -59,6 +60,7 @@ class MainWindow(QtWidgets.QWidget):
     btn_browse_folder: QtWidgets.QPushButton
     btn_convert: QtWidgets.QPushButton
     te_logger: QTextEditLogger
+    check_debug_mode: QtWidgets.QCheckBox
 
     def __init__(self):
         super().__init__()
@@ -82,6 +84,7 @@ class MainWindow(QtWidgets.QWidget):
         self.sb_id = QtWidgets.QSpinBox()
         self.btn_convert = QtWidgets.QPushButton("Lancer la conversion")
         self.te_logger = QTextEditLogger(self)
+        self.check_debug_mode = QtWidgets.QCheckBox("Mode débug")
 
     def create_layouts(self):
         self.main_layout = QtWidgets.QGridLayout(self)
@@ -95,10 +98,12 @@ class MainWindow(QtWidgets.QWidget):
         self.main_layout.addWidget(self.sb_id, 2, 1, 1, 2)
         self.main_layout.addWidget(self.btn_convert, 3, 0, 1, 3)
         self.main_layout.addWidget(self.te_logger.widget, 4, 0, 1, 4)
+        self.main_layout.addWidget(self.check_debug_mode, 5, 0, 1, 4)
 
     def modify_widgets(self):
         self.te_logger.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
         logging.getLogger().addHandler(self.te_logger)
+        self.check_debug_mode.setCheckState(QtCore.Qt.CheckState.Unchecked)
 
     def setup_connections(self):
         self.btn_browse_file.clicked.connect(self.select_file)
@@ -157,6 +162,7 @@ class MainWindow(QtWidgets.QWidget):
         self.btn_browse_folder.setEnabled(enable)
         self.sb_id.setEnabled(enable)
         self.btn_convert.setEnabled(enable)
+        self.check_debug_mode.setEnabled(enable)
 
     def convert_file(self):
         if not self.check_validity():
@@ -167,7 +173,7 @@ class MainWindow(QtWidgets.QWidget):
 
         self.thread = QtCore.QThread(self)
         self.worker = Worker(file_to_convert=self.le_file.text(), output_folder=self.le_folder.text(),
-                             last_db_id=self.sb_id.value())
+                             last_db_id=self.sb_id.value(), debug_mode=self.check_debug_mode.isChecked())
         self.worker.moveToThread(self.thread)
         self.thread.started.connect(self.worker.convert_file)
         self.worker.finished.connect(self.finished_process)

@@ -6,10 +6,9 @@ from bs4.element import CData, Tag
 from html_sanitizer import Sanitizer
 from lxml.builder import unicode
 
-logging.getLogger().setLevel(logging.INFO)
-
 
 class ExportFormatter:
+    _debug_level: int
     _soup_doc: BeautifulSoup
     _soup_comments: BeautifulSoup
     _sanitizer: Sanitizer
@@ -18,7 +17,7 @@ class ExportFormatter:
     _file_path: Path
     _output_folder: Path
 
-    def __init__(self, file_path: str, output_folder: str, last_wp_id: int):
+    def __init__(self, file_path: str, output_folder: str, last_wp_id: int, debug_mode: bool = False):
         """
         Initialize the export formatter.
         :param file_path: file to extract data from
@@ -33,6 +32,11 @@ class ExportFormatter:
         self._file_path = Path(file_path)
         self._output_folder = Path(output_folder)
         self._content_id = last_wp_id + 1  # set to the next id in target WP database, post and page ids will be set starting from this one
+
+        if debug_mode:
+            logging.getLogger().setLevel(logging.DEBUG)
+        else:
+            logging.getLogger().setLevel(logging.INFO)
 
     def convert_to_wp_format(self):
         """
@@ -239,7 +243,7 @@ class ExportFormatter:
 
 
 if __name__ == '__main__':
-    process = ExportFormatter(file_path="../../data/export-overblog.xml",
+    process = ExportFormatter(file_path="../../data/export_overblog.xml",
                               output_folder="output",
                               last_wp_id=7)
     process.convert_to_wp_format()
