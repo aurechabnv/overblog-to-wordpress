@@ -26,7 +26,7 @@ class ExportFormatter:
         """
         self._soup_comments = BeautifulSoup('<comments></comments>', 'xml')
         self._sanitizer = self._setup_sanitizer()
-        self._comment_id = 0 # comments are not have a different increment id
+        self._comment_id = 0 # comments have a different increment id from posts and pages
 
         # user-determined values
         self._file_path = Path(file_path)
@@ -152,7 +152,7 @@ class ExportFormatter:
         node.created_at.decompose()
         node.modified_at.decompose()
 
-        # add post id
+        # add content id
         import_id_tag = self._soup_doc.new_tag('import_id')
         import_id_tag.string = str(self._content_id)
         node.append(import_id_tag)
