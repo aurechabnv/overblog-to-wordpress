@@ -64,7 +64,7 @@ class MainWindow(QtWidgets.QWidget):
 
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("OverBlog vers WordPress")
+        self.setWindowTitle("Formatter d'export OverBlog vers WordPress")
         self.setup_ui()
 
     def setup_ui(self):
@@ -80,7 +80,7 @@ class MainWindow(QtWidgets.QWidget):
         self.lbl_folder = QtWidgets.QLabel("Dossier de sortie :")
         self.le_folder = QtWidgets.QLineEdit("output")
         self.btn_browse_folder = QtWidgets.QPushButton("Parcourir...")
-        self.lbl_id = QtWidgets.QLabel("Dernière ID WordPress :")
+        self.lbl_id = QtWidgets.QLabel("Dernier ID WordPress :")
         self.sb_id = QtWidgets.QSpinBox()
         self.btn_convert = QtWidgets.QPushButton("Lancer la conversion")
         self.te_logger = QTextEditLogger(self)
