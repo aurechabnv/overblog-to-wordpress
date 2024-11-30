@@ -1,4 +1,4 @@
-# py-export-formatter-ob2wp
+# py-formatter-ob2wp
 
 > Convertissez votre fichier d'export OverBlog en trois fichiers XML compatibles avec le plugin WP All Import pour WordPress
 
