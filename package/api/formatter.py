@@ -118,7 +118,6 @@ class ExportFormatter:
         nodes = self._soup_doc.find_all(node_name)
         logging.info(f"Formattage de {len(nodes)} {node_name}{'s' if len(nodes) > 1 else ''}...")
         for node in nodes:
-            self._content_id += 1
             self._process_node(node)
 
     def _process_node(self, node):
@@ -136,7 +135,8 @@ class ExportFormatter:
         node.created_at.decompose()
         node.modified_at.decompose()
 
-        # add content id
+        # increment and add content id
+        self._content_id += 1
         import_id_tag = self._soup_doc.new_tag('import_id')
         import_id_tag.string = str(self._content_id)
         node.append(import_id_tag)
@@ -168,7 +168,6 @@ class ExportFormatter:
             if type(comment) != Tag:
                 continue
 
-            self._comment_id = self._comment_id + 1
             comment = comment.extract()
             logging.debug(f"Avant : {comment}")
 
@@ -181,7 +180,8 @@ class ExportFormatter:
             post_id_tag.string = str(self._content_id)
             comment.append(post_id_tag)
 
-            # add comment id
+            # increment and add comment id
+            self._comment_id = self._comment_id + 1
             comment_id_tag = self._soup_comments.new_tag('comment_id')
             comment_id_tag.string = str(self._comment_id)
             comment.append(comment_id_tag)
