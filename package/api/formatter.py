@@ -23,6 +23,7 @@ class ExportFormatter:
         :param file_path: file to extract data from
         :param output_folder: folder to write converted data to
         :param last_wp_id: latest known WordPress database id
+        :param debug_mode: show debug messages in logs
         """
         self._soup_comments = BeautifulSoup('<comments></comments>', 'xml')
         self._sanitizer = self._setup_sanitizer()
